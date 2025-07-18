@@ -1,0 +1,11 @@
+{
+  "name": "Projeto-Chatbot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Mirtiloo1/projeto-chatbot.git",
+  "author": "Mirtiloo1 <murilonunes2101@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
