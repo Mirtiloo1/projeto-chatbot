@@ -50,16 +50,24 @@ app.post("/", async (req, res) => {
       const from = message.from;
       const msg_body = message.text.body;
 
+      const systemInstruction =
+        "Você é o ZapBot super maneirão. Você deve agir como se fosse super maneiro e conversar sempre no idioma Português Brasileiro de forma amigável e maneira.";
+      const fullPrompt =
+        systemInstruction + "\n\n" + "Pergunta do cliente: " + msg_body;
+
       console.log(`Mensagem de ${from}: ${msg_body}`);
 
       try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // GEMINI
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const result = await model.generateContent(msg_body);
+        const result = await model.generateContent(fullPrompt);
         const response = await result.response;
         const iaResponse = response.text();
 
         console.log(`Resposta do Gemini: ${iaResponse}`);
+
+        // CHAT GPT - OPENAI
         // const completion = await openai.chat.completions.create({
         //   model: "gpt-3.5-turbo",
         //   messages: [{ role: "user", content: msg_body }],
