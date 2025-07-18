@@ -1,7 +1,8 @@
 // Import Express.js
 const express = require("express");
 const axios = require("axios");
-const { OpenAI } = require("openai");
+// const { OpenAI } = require("openai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Create an Express app
 const app = express();
@@ -14,10 +15,10 @@ const port = process.env.PORT || 3000;
 const verifyToken = process.env.VERIFY_TOKEN;
 const whatsappToken = process.env.WHATSAPP_TOKEN;
 const phoneNumberId = process.env.PHONE_NUMBER_ID;
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
 
 // Route for GET requests
 app.get("/", (req, res) => {
@@ -52,13 +53,20 @@ app.post("/", async (req, res) => {
       console.log(`Mensagem de ${from}: ${msg_body}`);
 
       try {
-        const completion = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: "user", content: msg_body }],
-        });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const iaResponse = completion.choices[0].message.content;
-        console.log(`Resposta da IA: ${iaResponse}`);
+        const result = await model.generateContent(msg_body);
+        const response = await result.response;
+        const iaResponse = response.text();
+
+        console.log(`Resposta do Gemini: ${iaResponse}`);
+        // const completion = await openai.chat.completions.create({
+        //   model: "gpt-3.5-turbo",
+        //   messages: [{ role: "user", content: msg_body }],
+        // });
+
+        // const iaResponse = completion.choices[0].message.content;
+        // console.log(`Resposta da IA: ${iaResponse}`);
 
         axios({
           method: "POST",
