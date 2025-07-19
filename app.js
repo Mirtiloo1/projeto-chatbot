@@ -4,14 +4,13 @@ const axios = require("axios");
 
 // Dayjs
 const dayjs = require("dayjs");
-const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
-
 // Ativar os plugins no dayjs
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Histórico de conversas
 let conversationHistories = {};
 
 // const { OpenAI } = require("openai");
