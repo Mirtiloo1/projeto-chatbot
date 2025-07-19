@@ -1,6 +1,15 @@
 // Import Express.js
 const express = require("express");
 const axios = require("axios");
+const { Pool } = require("pg");
+
+//Postgre
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
 // Dayjs
 const dayjs = require("dayjs");
@@ -9,9 +18,6 @@ const timezone = require("dayjs/plugin/timezone");
 // Ativar os plugins no dayjs
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-// Histórico de conversas
-let conversationHistories = {};
 
 // const { OpenAI } = require("openai");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -56,13 +62,14 @@ app.post("/", async (req, res) => {
     body.object === "whatsapp_business_account" &&
     body.entry[0]?.changes[0]?.value?.messages?.[0]
   ) {
+    res.status(200).end(); 
     const message = body.entry[0].changes[0].value.messages[0];
 
     if (message.type !== "text") {
       console.log(
         "Recebido uma mensagem que não é do tipo texto. Ignorando..."
       );
-      return res.status(200).end();
+      return;
     }
 
     const from = message.from;
@@ -70,7 +77,13 @@ app.post("/", async (req, res) => {
 
     console.log(`Mensagem de: ${from}: ${msg_body}`);
 
+    let client;
     try {
+      client = await pool.connect();
+
+      const result = await client.query('SELECT history FROM conversations WHERE user_id = $1', [from])
+      let history = (result.rows.length > 0) ? result.rows[0].history : [];
+
       const dataHoraAtual = dayjs()
         .tz("America/Sao_Paulo")
         .format("DD/MM/YYYY HH:mm:ss");
@@ -106,8 +119,6 @@ app.post("/", async (req, res) => {
 
       Usuário: ${msg_body}`;
 
-      let history = conversationHistories[from] || [];
-
       const safetySettings = [
         {
           category: "HARM_CATEGORY_HARASSMENT",
@@ -138,15 +149,24 @@ app.post("/", async (req, res) => {
           maxOutputTokens: 1000,
         },
       });
-
-      const result = await chat.sendMessage(msg_body);
-      const response = await result.response;
+      const resultGemini = await chat.sendMessage(msg_body);
+      const response = await resultGemini.response;
       const iaResponse = response.text().trim();
 
       console.log(`Resposta do Gemini: ${iaResponse}`);
 
       if (iaResponse) {
-        conversationHistories[from] = await chat.getHistory();
+        const updatedHistory = await chat.getHistory();
+        const updatedHistoryJson = JSON.stringify(updatedHistory);
+
+        const upsertQuery = `
+          INSERT INTO conversations (user_id, history, last_updated)
+          VALUES ($1, $2, NOW())
+          ON CONFLICT (user_id) DO UPDATE SET
+            history = EXCLUDED.history,
+            last_updated = NOW();
+        `;
+        await client.query(upsertQuery, [from, updatedHistoryJson]);
 
         axios({
           method: "POST",
@@ -166,9 +186,13 @@ app.post("/", async (req, res) => {
       }
     } catch (error) {
       console.log("Ocorreu um erro:", error);
+    } finally{
+      if(client) {
+        client.release();
+        console.log("Conexão com o banco de dados liberada.");
+      }
     }
   }
-  res.status(200).end();
 });
 
 // Start the server

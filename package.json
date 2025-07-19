@@ -9,7 +9,9 @@
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.10.0",
     "dayjs": "^1.11.13",
+    "dotenv": "^17.2.0",
     "express": "^5.1.0",
-    "openai": "^5.10.1"
+    "openai": "^5.10.1",
+    "pg": "^8.16.3"
   }
 }
