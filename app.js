@@ -1,6 +1,8 @@
 // Import Express.js
 const express = require("express");
+import dayjs from "dayjs";
 const axios = require("axios");
+const dayjs = require("dayjs");
 
 let conversationHistories = {};
 
@@ -62,9 +64,7 @@ app.post("/", async (req, res) => {
     console.log(`Mensagem de: ${from}: ${msg_body}`);
 
     try {
-      const dataHoraAtual = new Date().toLocaleDateString("pt-BR", {
-        timeZone: "America/Sao_Paulo",
-      });
+      const dataHoraAtual = dayjs().format("DD/MM/YYYY HH:mm:ss");
       let history = conversationHistories[from] || [];
 
       const safetySettings = [
@@ -96,7 +96,7 @@ app.post("/", async (req, res) => {
             role: "user",
             parts: [
               {
-                text: `INSTRUÇÃO: Você é um assistente prestativo. A data e hora atuais são ${dataHoraAtual}. Seu nome é ZapBot e você deve agir de forma maneira pois você é super maneiro.`,
+                text: `INSTRUÇÃO: Você é um assistente prestativo. A data e hora atuais são ${dataHoraAtual}. Seu nome é ZapBot e você deve agir de forma maneira pois você é super maneiro. Você não deve deixar a pessoa com quem está conversando no vácuo. Deve sempre responder`,
               },
             ],
           },
