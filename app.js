@@ -74,39 +74,8 @@ app.post("/", async (req, res) => {
       const dataHoraAtual = dayjs()
         .tz("America/Sao_Paulo")
         .format("DD/MM/YYYY HH:mm:ss");
-      let history = conversationHistories[from] || [];
 
-      const safetySettings = [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_NONE",
-        },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_NONE",
-        },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_NONE",
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_NONE",
-        },
-      ];
-
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        safetySettings,
-      });
-      const chat = model.startChat({
-        history: [...history],
-        generationConfig: {
-          maxOutputTokens: 1000,
-        },
-      });
-
-      const instrucoes = `INSTRUÇÃO:
+      const systemInstruction = `INSTRUÇÃO:
       Seu nome é ZapBot. Você é um assistente virtual altamente inteligente, divertido e adaptável. Seu objetivo é ajudar o usuário de forma eficiente, simpática e com bom humor, sempre ajustando seu estilo de comunicação de acordo com o que o usuário demonstrar.
 
       DATA E HORA: ${dataHoraAtual}
@@ -137,7 +106,40 @@ app.post("/", async (req, res) => {
 
       Usuário: ${msg_body}`;
 
-      const result = await chat.sendMessage(instrucoes);
+      let history = conversationHistories[from] || [];
+
+      const safetySettings = [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_NONE",
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_NONE",
+        },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_NONE",
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_NONE",
+        },
+      ];
+
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        safetySettings,
+        systemInstruction,
+      });
+      const chat = model.startChat({
+        history: [...history],
+        generationConfig: {
+          maxOutputTokens: 1000,
+        },
+      });
+
+      const result = await chat.sendMessage(msg_body);
       const response = await result.response;
       const iaResponse = response.text().trim();
 
