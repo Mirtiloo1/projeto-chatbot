@@ -1,8 +1,19 @@
 // Import Express.js
 const express = require("express");
-import dayjs from "dayjs";
 const axios = require("axios");
 const dayjs = require("dayjs");
+
+// Dayjs
+import dayjs from "dayjs";
+
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+
+// Ativar os plugins no dayjs
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 
 let conversationHistories = {};
 
@@ -64,7 +75,7 @@ app.post("/", async (req, res) => {
     console.log(`Mensagem de: ${from}: ${msg_body}`);
 
     try {
-      const dataHoraAtual = dayjs().format("DD/MM/YYYY HH:mm:ss");
+      const dataHoraAtual = dayjs().tz("America/Sao_Paulo").format("DD/MM/YYYY HH:mm:ss");
       let history = conversationHistories[from] || [];
 
       const safetySettings = [
