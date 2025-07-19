@@ -43,48 +43,55 @@ app.get("/", (req, res) => {
 app.post("/", async (req, res) => {
   const body = req.body;
 
-  if (body.object === "whatsapp_business_account" && body.entry[0]?.changes[0]?.value?.messages?.[0]) {
+  if (
+    body.object === "whatsapp_business_account" &&
+    body.entry[0]?.changes[0]?.value?.messages?.[0]
+  ) {
     const message = body.entry[0].changes[0].value.messages[0];
     const from = message.from;
     const msg_body = message.text.body;
 
     console.log(`Mensagem de: ${from}: ${msg_body}`);
-    
-    try{
-        let history = conversationHistories[from] || [];
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const chat = model.startChat({
-          history: history,
-          generationConfig: {
-            maxOutputTokens: 200,
-          },
-        });
+    try {
+      let history = conversationHistories[from] || [];
 
-        const result = await chat.sendMessage(msg_body);
-        const response = await result.response;
-        const iaResponse = response.text();
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const chat = model.startChat({
+        history: history,
+        generationConfig: {
+          maxOutputTokens: 200,
+        },
+      });
 
-        console.log(`Resposta do Gemini: ${iaResponse}`);
+      const result = await chat.sendMessage(msg_body);
+      const response = await result.response;
+      const iaResponse = response.text().trim();
 
+      console.log(`Resposta do Gemini: ${iaResponse}`);
+
+      if (iaResponse) {
         conversationHistories[from] = await chat.getHistory();
 
         axios({
           method: "POST",
           url: `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
           headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${whatsappToken}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${whatsappToken}`,
           },
           data: {
-              messaging_product: "whatsapp",
-              to: from,
-              text: { body: iaResponse },
+            messaging_product: "whatsapp",
+            to: from,
+            text: { body: iaResponse },
           },
         });
-      } catch(error) {
-        console.log("Ocorreu um erro:", error);
+      } else {
+        console.log("A resposta da IA foi vazia. Nenhuma mensagem enviada.");
       }
+    } catch (error) {
+      console.log("Ocorreu um erro:", error);
+    }
   }
   res.status(200).end();
 });
