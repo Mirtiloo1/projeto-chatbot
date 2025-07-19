@@ -48,12 +48,23 @@ app.post("/", async (req, res) => {
     body.entry[0]?.changes[0]?.value?.messages?.[0]
   ) {
     const message = body.entry[0].changes[0].value.messages[0];
+
+    if (message.type !== "text") {
+      console.log(
+        "Recebido uma mensagem que não é do tipi texto. Ignorando..."
+      );
+      return res.status(200).end();
+    }
+
     const from = message.from;
     const msg_body = message.text.body;
 
     console.log(`Mensagem de: ${from}: ${msg_body}`);
 
     try {
+      const dataHoraAtual = new Date().toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      });
       let history = conversationHistories[from] || [];
 
       const safetySettings = [
@@ -80,9 +91,27 @@ app.post("/", async (req, res) => {
         safetySettings,
       });
       const chat = model.startChat({
-        history: history,
+        history: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `INSTRUÇÃO: Você é um assistente prestativo. A data e hora atuais são ${dataHoraAtual}. Seu nome é ZapBot e você deve agir de forma maneira pois você é super maneiro.`,
+              },
+            ],
+          },
+          {
+            role: "model",
+            parts: [
+              {
+                text: "Entendido. Estou ciente da data e hora. Como posso ajudar?",
+              },
+            ],
+          },
+          ...history,
+        ],
         generationConfig: {
-          maxOutputTokens: 200,
+          maxOutputTokens: 1000,
         },
       });
 
