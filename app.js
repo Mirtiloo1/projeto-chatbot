@@ -60,7 +60,7 @@ app.post("/", async (req, res) => {
 
     if (message.type !== "text") {
       console.log(
-        "Recebido uma mensagem que não é do tipi texto. Ignorando..."
+        "Recebido uma mensagem que não é do tipo texto. Ignorando..."
       );
       return res.status(200).end();
     }
@@ -100,31 +100,15 @@ app.post("/", async (req, res) => {
         safetySettings,
       });
       const chat = model.startChat({
-        history: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: `INSTRUÇÃO: Você é um assistente prestativo. A data e hora atuais são ${dataHoraAtual}. Seu nome é ZapBot e você deve agir de forma maneira pois você é super maneiro. Você não deve deixar a pessoa com quem está conversando no vácuo. Deve sempre responder`,
-              },
-            ],
-          },
-          {
-            role: "model",
-            parts: [
-              {
-                text: "Entendido. Estou ciente da data e hora. Como posso ajudar?",
-              },
-            ],
-          },
-          ...history,
-        ],
+        history: [...history],
         generationConfig: {
           maxOutputTokens: 1000,
         },
       });
 
-      const result = await chat.sendMessage(msg_body);
+      const instrucoes = `INSTRUÇÃO: Você é um assistente prestativo. A data e hora atuais são ${dataHoraAtual}. Seu nome é ZapBot e você deve agir de forma maneira pois você é super maneiro. Você não deve deixar a pessoa com quem está conversando no vácuo. Deve sempre responder.\n\nUsuário: ${msg_body}`;
+
+      const result = await chat.sendMessage(instrucoes);
       const response = await result.response;
       const iaResponse = response.text().trim();
 
