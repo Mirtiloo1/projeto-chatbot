@@ -11,14 +11,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  * @param {Array<object>} history
  * @param {string} userMessage
  * @returns {Promise<{iaResponse: string, updatedHistory: Array<object>}|null>}
-*/
+ */
 
 async function generateResponse(history, userMessage) {
   try {
     const systemInstruction = getSystemInstruction(faqData);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-pro",
+      model: "gemini-1.5-flash",
       safetySettings,
       systemInstruction,
     });
@@ -41,4 +41,6 @@ async function generateResponse(history, userMessage) {
   }
 }
 
-module.exports = generateResponse;
+module.exports = {
+  generateResponse,
+};
