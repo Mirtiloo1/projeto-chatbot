@@ -61,6 +61,21 @@ app.post("/", async (req, res) => {
   }
 });
 
+app.get("/conversations", async (req, res) => {
+  try {
+    
+    res.status(200).json();
+  } catch (error) {
+    console.log("Erro ao tentar obter as mensagens.", error);
+  }
+});
+
+app.post("/conversations", (req, res) => {
+  res.status(200).send({
+    mensagem: "Testando",
+  });
+});
+
 // Inicia o servidor
 app.listen(port, () => {
   console.log(`\nServidor rodando na porta ${port}. Aguardando mensagens...`);
