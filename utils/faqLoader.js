@@ -3,7 +3,7 @@ const path = require("path");
 
 /**
  * @returns {object|null}
- */
+*/
 
 function carregarFaqJson() {
   try {

@@ -1,32 +1,20 @@
-const faqData = require("./utils/faqLoader")();
-
-const {
-  getSystemInstruction,
-  safetySettings,
-} = require("./config/geminiConfig");
-
-const { getHistory, saveHistory } = require("./services/databaseService");
-
-// Import Express.js
+// Módulo principal do app
 const express = require("express");
-const axios = require("axios");
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// Imports
+const whatsappService = require("./services/whatsappService");
+const geminiService = require("./services/geminiService");
+const databaseService = require("./services/databaseService");
 
-// Create an Express app
+// Cria um app express
 const app = express();
-
-// Middleware to parse JSON bodies
 app.use(express.json());
 
-// variáveis de ambiente
+// Variáveis de ambiente
 const port = process.env.PORT || 3000;
 const verifyToken = process.env.VERIFY_TOKEN;
-const whatsappToken = process.env.WHATSAPP_TOKEN;
-const phoneNumberId = process.env.PHONE_NUMBER_ID;
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Route for GET requests
+// Rota requisição GET
 app.get("/", (req, res) => {
   const {
     "hub.mode": mode,
@@ -42,80 +30,38 @@ app.get("/", (req, res) => {
   }
 });
 
-// Route for POST requests
+// Rota requisição POST
 app.post("/", async (req, res) => {
-  const body = req.body;
-
-  if (
-    body.object === "whatsapp_business_account" &&
-    body.entry[0]?.changes[0]?.value?.messages?.[0]
-  ) {
+  try {
     res.status(200).end();
-    const message = body.entry[0].changes[0].value.messages[0];
+    const messagePayload = whatsappService.parseMessage(req.body);
 
-    if (message.type !== "text") {
-      console.log(
-        "Recebido uma mensagem que não é do tipo texto. Ignorando..."
-      );
-      return;
-    }
+    if (messagePayload) {
+      const { from, msg_body } = messagePayload;
+      console.log(`Mensagem recebida de ${from}: "${msg_body}"`);
 
-    const from = message.from;
-    const msg_body = message.text.body;
+      const history = await databaseService.getHistory(from);
+      const result = await geminiService.generateResponse(history, msg_body);
 
-    console.log(`Mensagem de: ${from}: ${msg_body}`);
+      if (result && result.iaResponse) {
+        const { iaResponse, updatedHistory } = result;
 
-    try {
-      if (!faqData) {
-        console.log("Não foi possível carregar o FAQ. Usando prompt padrão.");
-      }
-      const history = await getHistory(from);
-      const systemInstruction = getSystemInstruction(faqData);
+        await databaseService.saveHistory(from, updatedHistory);
 
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        safetySettings,
-        systemInstruction,
-      });
-      const chat = model.startChat({
-        history,
-        generationConfig: {
-          maxOutputTokens: 1000,
-        },
-      });
-      const resultGemini = await chat.sendMessage(msg_body);
-      const response = await resultGemini.response;
-      const iaResponse = response.text().trim();
-
-      console.log(`Resposta do Gemini: ${iaResponse}`);
-
-      if (iaResponse) {
-        const updatedHistory = await chat.getHistory();
-        await saveHistory(from, updatedHistory);
-
-        axios({
-          method: "POST",
-          url: `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${whatsappToken}`,
-          },
-          data: {
-            messaging_product: "whatsapp",
-            to: from,
-            text: { body: iaResponse },
-          },
-        });
+        await whatsappService.sendMessage(from, iaResponse);
+        console.log(`Resposta enviada para ${from}: "${iaResponse}"`);
       } else {
-        console.log("A resposta da IA foi vazia. Nenhuma mensagem enviada.");
+        console.log(
+          "A resposta da IA foi vazia ou houve um erro no serviço Gemini."
+        );
       }
-    } catch (error) {
-      console.log("Ocorreu um erro:", error);
     }
+  } catch (error) {
+    console.error("ERRO NO FLUXO PRINCIPAL:", error);
   }
 });
 
-// Start the server
+// Inicia o servidor
 app.listen(port, () => {
-  console.log(`\nListening on port ${port}\n`);
+  console.log(`\nServidor rodando na porta ${port}. Aguardando mensagens...`);
 });
