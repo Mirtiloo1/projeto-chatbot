@@ -1,0 +1,21 @@
+{
+  "informacoes_gerais": {
+    "horario_funcionamento": {
+      "segunda_a_quinta": "10h às 23h",
+      "sexta": "10h às 22h",
+      "fins_de_semana_e_feriados": "12h às 20h"
+    },
+    "endereco": "Rua aleatória, 30, Tude Bastos",
+    "telefone": "(11) 12345-6789",
+    "area_entrega": "Atendemos do bairro Jardim Real ao Canto do Forte.",
+    "taxa_entrega": "A taxa de entrega é de R$ 5,00 para todos os bairros."
+  },
+  "cardapio": {
+    "pizzas_salgadas": [],
+    "pizzas_doces": [],
+    "bebidas": []
+  },
+  "pagamento": {
+    "metodos": "Dinheiro, Pix, Cartão de Crédito e Débito (Bandeiras Visa e Master)."
+  }
+}
