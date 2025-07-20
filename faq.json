@@ -11,9 +11,25 @@
     "taxa_entrega": "A taxa de entrega é de R$ 5,00 para todos os bairros."
   },
   "cardapio": {
-    "pizzas_salgadas": [],
-    "pizzas_doces": [],
-    "bebidas": []
+    "pizzas_salgadas": [
+      "Frango com catupiry",
+      "4 queijos",
+      "Calabresa",
+      "Portuguesa",
+      "Brócolis"
+    ],
+    "pizzas_doces": [
+      "Banana com chocolate",
+      "Morango com chocolate",
+      "Leite ninho",
+      "Brigadeiro"
+    ],
+    "bebidas": [
+      "Coca cola 2l",
+      "Pepsi 2l",
+      "Suco de laranja",
+      "Coca cola zero 2l"
+    ]
   },
   "pagamento": {
     "metodos": "Dinheiro, Pix, Cartão de Crédito e Débito (Bandeiras Visa e Master)."
