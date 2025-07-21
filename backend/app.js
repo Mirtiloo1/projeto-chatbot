@@ -3,7 +3,6 @@ const express = require("express");
 require("dotenv").config();
 console.log("URL do banco:", process.env.DATABASE_URL);
 
-
 // Imports
 const whatsappService = require("./services/whatsappService");
 const geminiService = require("./services/geminiService");
@@ -67,17 +66,28 @@ app.post("/", async (req, res) => {
 app.get("/conversations/:id", async (req, res) => {
   try {
     const from = req.params.id;
+    console.log(`Buscando histórico para: ${from}.`);
     const history = await databaseService.getHistory(from);
+    console.log(`Histórico encontrado: ${history}`);
     res.status(200).json(history);
   } catch (error) {
     console.log("Erro ao tentar obter as mensagens.", error);
+    res.status(500).json({ error: "Erro interno ao buscar histórico" });
   }
 });
 
-app.post("/conversations", (req, res) => {
-  res.status(200).send({
-    mensagem: "Testando",
-  });
+app.get("/conversations", async (req, res) => {
+  try {
+    console.log("Buscando histórico completo de conversas...");
+    const fullHistory = await databaseService.getAllHistories();
+    console.log("Histórico encontrado.");
+    res.status(200).json(fullHistory);
+  } catch (error) {
+    console.log("Erro ao tentar buscar histórico completo de conversas", error);
+    res
+      .status(500)
+      .json({ error: "Erro internoi ao buscar histórico completo " });
+  }
 });
 
 // Inicia o servidor

@@ -58,7 +58,26 @@ async function saveHistory(userId, history) {
   }
 }
 
+async function getAllHistories() {
+  let client;
+  try {
+    client = await pool.connect();
+    const fullHistory = await client.query(
+      "SELECT * FROM conversations ORDER BY last_updated DESC"
+    );
+    return fullHistory.rows;
+  } catch (error) {
+    console.log("Não foi possível obter histórico completo de conversas.");
+    return [];
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+
 module.exports = {
   getHistory,
   saveHistory,
+  getAllHistories,
 };
