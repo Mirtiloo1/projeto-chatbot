@@ -16,6 +16,20 @@ app.use(express.json());
 const port = process.env.PORT || 3000;
 const verifyToken = process.env.VERIFY_TOKEN;
 console.log(process.env.NODE_ENV);
+
+// Middleware para verificar a Chave de API
+function apiKeyAuth(req, res, next) {
+  const apiKey = req.headers["x-api-key"]; // 1. Pega a chave que veio na requisição
+
+  // 2. Verifica se a chave existe e se é igual à que está no .env
+  if (apiKey && apiKey === process.env.API_KEY) {
+    next(); // 3. Se for igual, deixa a requisição passar para a próxima etapa
+  } else {
+    // 4. Se for diferente ou não existir, barra a entrada com um erro
+    res.status(401).json({ error: "Acesso não autorizado" });
+  }
+}
+
 // Rota requisição GET
 app.get("/", (req, res) => {
   const {
@@ -63,20 +77,7 @@ app.post("/", async (req, res) => {
   }
 });
 
-app.get("/conversations/:id", async (req, res) => {
-  try {
-    const from = req.params.id;
-    console.log(`Buscando histórico para: ${from}.`);
-    const history = await databaseService.getHistory(from);
-    console.log(`Histórico encontrado: ${history}`);
-    res.status(200).json(history);
-  } catch (error) {
-    console.log("Erro ao tentar obter as mensagens.", error);
-    res.status(500).json({ error: "Erro interno ao buscar histórico" });
-  }
-});
-
-app.get("/conversations", async (req, res) => {
+app.get("/conversations", apiKeyAuth, async (req, res) => {
   try {
     console.log("Buscando histórico completo de conversas...");
     const fullHistory = await databaseService.getAllHistories();
@@ -86,7 +87,20 @@ app.get("/conversations", async (req, res) => {
     console.log("Erro ao tentar buscar histórico completo de conversas", error);
     res
       .status(500)
-      .json({ error: "Erro internoi ao buscar histórico completo " });
+      .json({ error: "Erro interno ao buscar histórico completo " });
+  }
+});
+
+app.get("/conversations/:id", apiKeyAuth, async (req, res) => {
+  try {
+    const from = req.params.id;
+    console.log(`Buscando histórico para: ${from}.`);
+    const history = await databaseService.getHistory(from);
+    console.log(`Histórico encontrado: ${history}`);
+    res.status(200).json(history);
+  } catch (error) {
+    console.log("Erro ao tentar obter as mensagens.", error);
+    res.status(500).json({ error: "Erro interno ao buscar histórico" });
   }
 });
 
