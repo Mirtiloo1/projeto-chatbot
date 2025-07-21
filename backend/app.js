@@ -1,7 +1,7 @@
 // Módulo principal do app
 const express = require("express");
+const cors = require("cors");
 require("dotenv").config();
-console.log("URL do banco:", process.env.DATABASE_URL);
 
 // Imports
 const whatsappService = require("./services/whatsappService");
@@ -11,6 +11,7 @@ const databaseService = require("./services/databaseService");
 // Cria um app express
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 // Variáveis de ambiente
 const port = process.env.PORT || 3000;
