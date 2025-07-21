@@ -1,5 +1,8 @@
 // Módulo principal do app
 const express = require("express");
+require("dotenv").config();
+console.log("URL do banco:", process.env.DATABASE_URL);
+
 
 // Imports
 const whatsappService = require("./services/whatsappService");
@@ -13,7 +16,7 @@ app.use(express.json());
 // Variáveis de ambiente
 const port = process.env.PORT || 3000;
 const verifyToken = process.env.VERIFY_TOKEN;
-
+console.log(process.env.NODE_ENV);
 // Rota requisição GET
 app.get("/", (req, res) => {
   const {
@@ -61,10 +64,11 @@ app.post("/", async (req, res) => {
   }
 });
 
-app.get("/conversations", async (req, res) => {
+app.get("/conversations/:id", async (req, res) => {
   try {
-    
-    res.status(200).json();
+    const from = req.params.id;
+    const history = await databaseService.getHistory(from);
+    res.status(200).json(history);
   } catch (error) {
     console.log("Erro ao tentar obter as mensagens.", error);
   }
